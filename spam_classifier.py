@@ -2,9 +2,9 @@ import os
 from bs4 import BeautifulSoup
 import requests
 import pandas as pd
-from sklearn.pipeline import Pipeline
-from sklearn.naive_bayes import BernoulliNB
+from pyspark.ml import Pipeline
 from sklearn.naive_bayes import MultinomialNB
+from pyspark.mllib.classification import NaiveBayes
 from sklearn.model_selection import cross_val_score
 import numpy as np
 #from sklearn.feature_extraction.text import CountVectorizer
@@ -69,9 +69,10 @@ def read_enron_email_files():
         emails.append(body)
 
     all_emails = []
-    all_emails.extend(zip(ham_emails, [False] * len(ham_emails))
-    all_emails.extend(zip(spam_emails, [True] * len(spam_emails))
-    df = spark.createDataFrame(all_emails, ['body', 'spam'])
+    all_emails.extend(zip(ham_emails, [False] * len(ham_emails)))
+    all_emails.extend(zip(spam_emails, [True] * len(spam_emails)))
+
+    df = spark.createDataFrame(np.random.permutation(all_emails), ['body', 'spam'])
     #ham = pd.DataFrame({'body':emails, 'spam': False})
     #ham.index = index
     #spam = spark.createDataFrame(zip(emails, [True] * len(emails)), ['body', 'spam'])
@@ -81,7 +82,8 @@ def read_enron_email_files():
 
     #pd.options.display.expand_frame_repr = False
     #df = pd.concat([ham, spam])
-    return df.reindex(np.random.permutation(df.index))
+    #return df.reindex(np.random.permutation(df.index))
+    return df
 
 def scorer(est, X, y):
      y_pred = est.predict(X)
@@ -101,12 +103,13 @@ if __name__ == '__main__':
         print('Finished loading emails.')
 
     cv = CountVectorizer()
-    nb = MultinomialNB()
-    pipeline = Pipeline([('cv', cv), ('nb', nb)])
+    nb = NaiveBayes()
+    #pipeline = Pipeline([('cv', cv), ('nb', nb)])
+    pipeline = Pipeline(stages = [cv, nb])
 
     #pl.fit(df.body.values[:1000], df.spam.values[:1000].astype(int))
-    X = df.body
-    y = df.spam.astype(int)
+    X = df.select('body')
+    y = df.select('spam').astype(int)
 
 
     #print(cross_val_score(pipeline, X, y, scoring=scorer))
