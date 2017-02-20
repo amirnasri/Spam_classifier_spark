@@ -4,7 +4,7 @@ import requests
 import pandas as pd
 from pyspark.ml import Pipeline
 from sklearn.naive_bayes import MultinomialNB
-from pyspark.mllib.classification import NaiveBayes
+from pyspark.ml.classification import NaiveBayes
 from sklearn.model_selection import cross_val_score
 import numpy as np
 #from sklearn.feature_extraction.text import CountVectorizer
@@ -82,7 +82,7 @@ def read_enron_email_files():
     all_emails = []
     all_emails.extend(zip(ham_emails, [False] * len(ham_emails)))
     all_emails.extend(zip(spam_emails, [True] * len(spam_emails)))
-    all_emails_rdd = sc.parallelize(all_emails).collect()
+    all_emails_rdd = sc.parallelize(all_emails)
     #print(np.random.permutation(all_emails).tolist())
     #df = spark.createDataFrame(np.random.permutation(all_emails).tolist(), ['body', 'spam'])
     df = spark.createDataFrame(all_emails_rdd)
